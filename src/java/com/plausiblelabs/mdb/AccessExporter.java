@@ -223,7 +223,19 @@ public class AccessExporter {
 
             /* The column name and the VALUE binding */
             stmtBuilder.append(escapeIdentifier(column.getName()));
-            valueStmtBuilder.append("?");
+            
+            
+            switch(column.getType())
+            {
+                case SHORT_DATE_TIME:
+                    valueStmtBuilder.append("datetime(? / 1000, 'unixepoch', 'localtime')");
+                    break;
+                    
+                default:
+                    valueStmtBuilder.append("?");
+                    break;
+            }
+            
             
             if (i + 1 < columnCount) {
                 stmtBuilder.append(", ");
@@ -261,13 +273,16 @@ public class AccessExporter {
                         oStream.writeObject(row.get(column.getName()));
                         prep.setBytes(i + 1, bStream.toByteArray());
                         break;
+                        
                     case FLOAT:
                         prep.setDouble(i+1, (Float) row.get(column.getName()));
                         break;
+                    
                     case MONEY:
                         /* Store money as a string. Is there any other valid representation in SQLite? */
                         prep.setString(i + 1, row.get(column.getName()).toString());
                         break;
+                        
                     case BOOLEAN:
                         /* The SQLite JDBC driver does not handle boolean values */
                         final boolean bool;
@@ -275,6 +290,7 @@ public class AccessExporter {
 
                         /* Determine the value (1/0) */
                         bool = (Boolean) row.get(column.getName());
+                        
                         if (bool)
                             intVal = 1;
                         else
@@ -283,6 +299,7 @@ public class AccessExporter {
                         /* Store it */
                         prep.setInt(i + 1, intVal);
                         break;
+                        
                     default:
                         prep.setObject(i + 1, row.get(column.getName()));
                         break;
