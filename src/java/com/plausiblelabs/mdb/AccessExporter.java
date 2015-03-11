@@ -29,7 +29,9 @@
 
 package com.plausiblelabs.mdb;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -42,13 +44,13 @@ import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.Index;
 import com.healthmarketscience.jackcess.Table;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
+import com.plausiblelabs.mdb.handlers.T4ErrorHandler;
 
 /**
  * Handles export of an MS Access database to an SQLite file.
  */
 public class AccessExporter {
+	
     /**
      * Create a new exporter with the provided MS Access
      * database
@@ -208,8 +210,7 @@ public class AccessExporter {
 
     
     private void populateTable (Table table, Connection jdbc) throws SQLException, IOException {
-        System.out.println(table.getName());
-        System.out.println("-----------------------------");
+        System.out.println("Populating table: " + table.getName() + " ------------------------------");
         final StringBuilder stmtBuilder = new StringBuilder();
         final StringBuilder valueStmtBuilder = new StringBuilder();
         final List<Column> columns = table.getColumns();
@@ -225,12 +226,11 @@ public class AccessExporter {
         for (int i = 0; i < columnCount; i++) {
             final Column column = columns.get(i);
 
-            System.out.println(column.getName());
+//            System.out.println("Column Name: " + column.getName());
 
             /* The column name and the VALUE binding */
             stmtBuilder.append(escapeIdentifier(column.getName()));
-            
-            
+              
             switch(column.getType())
             {
                 case SHORT_DATE_TIME:
@@ -257,13 +257,17 @@ public class AccessExporter {
         /* Create the prepared statement */
         final PreparedStatement prep = jdbc.prepareStatement(stmtBuilder.toString());
 
-        System.out.println("-------------------");
-        System.out.println(prep);
-        System.out.println("-------------------");
+//        System.out.println("PreparedStatement Start-------------------");
+//        System.out.println(prep);
+//        System.out.println("PreparedStatement End -------------------");
+        
+        table.setErrorHandler(new T4ErrorHandler());
         
         /* Kick off the insert spree */
         for (Map<String, Object> row : table) {
-            System.out.println(row);
+        	
+//            System.out.println(row);
+        	
             /* Bind all the column values. We let JDBC do type conversion -- is this correct?. */
             for (int i = 0; i < columnCount; i++) {
                 final Column column = columns.get(i);
@@ -275,8 +279,8 @@ public class AccessExporter {
                     continue;
                 }
 
-                System.out.println(column.getType());
-                System.out.println(row.get(column.getName()));
+//                System.out.println(column.getType());
+//                System.out.println(row.get(column.getName()));
 
                 /* Perform any conversions */
                 switch (column.getType()) {
