@@ -201,15 +201,19 @@ public class AccessExporter {
         for (String tableName : tableNames) {
             Table table = db.getTable(tableName);
             createTable(table, jdbc);
-            createIndexes(table, jdbc);
+            System.out.println(tableName);
+            //createIndexes(table, jdbc);
         }
     }
 
     
     private void populateTable (Table table, Connection jdbc) throws SQLException, IOException {
-        final List<Column> columns = table.getColumns();
+        System.out.println(table.getName());
+        System.out.println("-----------------------------");
         final StringBuilder stmtBuilder = new StringBuilder();
         final StringBuilder valueStmtBuilder = new StringBuilder();
+        final List<Column> columns = table.getColumns();
+
         
         /* Record the column count */
         final int columnCount = columns.size();
@@ -220,6 +224,8 @@ public class AccessExporter {
         
         for (int i = 0; i < columnCount; i++) {
             final Column column = columns.get(i);
+
+            System.out.println(column.getName());
 
             /* The column name and the VALUE binding */
             stmtBuilder.append(escapeIdentifier(column.getName()));
@@ -250,9 +256,14 @@ public class AccessExporter {
         
         /* Create the prepared statement */
         final PreparedStatement prep = jdbc.prepareStatement(stmtBuilder.toString());
+
+        System.out.println("-------------------");
+        System.out.println(prep);
+        System.out.println("-------------------");
         
         /* Kick off the insert spree */
         for (Map<String, Object> row : table) {
+            System.out.println(row);
             /* Bind all the column values. We let JDBC do type conversion -- is this correct?. */
             for (int i = 0; i < columnCount; i++) {
                 final Column column = columns.get(i);
@@ -263,6 +274,9 @@ public class AccessExporter {
                     prep.setObject(i + 1, value);
                     continue;
                 }
+
+                System.out.println(column.getType());
+                System.out.println(row.get(column.getName()));
 
                 /* Perform any conversions */
                 switch (column.getType()) {
@@ -299,7 +313,7 @@ public class AccessExporter {
                         /* Store it */
                         prep.setInt(i + 1, intVal);
                         break;
-                        
+
                     default:
                         prep.setObject(i + 1, row.get(column.getName()));
                         break;
