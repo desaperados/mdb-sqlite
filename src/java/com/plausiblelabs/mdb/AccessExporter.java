@@ -203,8 +203,7 @@ public class AccessExporter {
         for (String tableName : tableNames) {
             Table table = db.getTable(tableName);
             createTable(table, jdbc);
-            System.out.println(tableName);
-            //createIndexes(table, jdbc);
+            createIndexes(table, jdbc);
         }
     }
 
@@ -225,8 +224,6 @@ public class AccessExporter {
         
         for (int i = 0; i < columnCount; i++) {
             final Column column = columns.get(i);
-
-//            System.out.println("Column Name: " + column.getName());
 
             /* The column name and the VALUE binding */
             stmtBuilder.append(escapeIdentifier(column.getName()));
@@ -257,16 +254,10 @@ public class AccessExporter {
         /* Create the prepared statement */
         final PreparedStatement prep = jdbc.prepareStatement(stmtBuilder.toString());
 
-//        System.out.println("PreparedStatement Start-------------------");
-//        System.out.println(prep);
-//        System.out.println("PreparedStatement End -------------------");
-        
         table.setErrorHandler(new T4ErrorHandler());
         
         /* Kick off the insert spree */
         for (Map<String, Object> row : table) {
-        	
-//            System.out.println(row);
         	
             /* Bind all the column values. We let JDBC do type conversion -- is this correct?. */
             for (int i = 0; i < columnCount; i++) {
@@ -278,9 +269,6 @@ public class AccessExporter {
                     prep.setObject(i + 1, value);
                     continue;
                 }
-
-//                System.out.println(column.getType());
-//                System.out.println(row.get(column.getName()));
 
                 /* Perform any conversions */
                 switch (column.getType()) {
